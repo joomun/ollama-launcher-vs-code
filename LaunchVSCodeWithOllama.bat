@@ -25,6 +25,19 @@ echo Listing available models in Ollama...
 REM List all available models in Ollama
 start "Ollama Models" cmd /k ollama list
 
+echo Select a model from the list:
+set /p MODEL_CHOICE=Enter the number of the model you want to use: 
+
+if "%MODEL_CHOICE%"=="1" (
+    set MODEL=qwen2.5-coder:7b
+) else if "%MODEL_CHOICE%"=="2" (
+    set MODEL=qwen2.5-coder:34b
+) else if "%MODEL_CHOICE%"=="3" (
+    set MODEL=qwen2.5-coder:10b
+) else (
+    echo Invalid choice, using default model.
+)
+
 echo Waiting for model initialization...
 timeout /t 10 /nobreak >nul
 
