@@ -2,11 +2,15 @@ from flask import Flask, request, Response
 import requests
 import time
 
-from logger import write_log
+from logger import write_model_log, write_system_log, write_journal
 
 app = Flask(__name__)
 
 OLLAMA = "http://localhost:11434"
+
+
+def is_oom(text):
+    return "more system memory" in text or "out of memory" in text
 
 
 @app.route("/api/generate", methods=["POST"])
@@ -18,16 +22,25 @@ def generate():
     model = payload.get("model", "unknown")
     prompt = payload.get("prompt", "")
 
-    response = requests.post(
-        f"{OLLAMA}/api/generate",
-        json=payload
-    )
+    try:
+        r = requests.post(f"{OLLAMA}/api/generate", json=payload)
 
-    duration = round(time.time() - start, 3)
+        duration = round(time.time() - start, 3)
+        text = r.text
 
-    write_log(model, prompt, duration, mode="generate")
+        if is_oom(text):
+            write_system_log("OOM ERROR DETECTED")
+            write_model_log(model, prompt, duration, error="OOM")
+        else:
+            write_model_log(model, prompt, duration)
 
-    return Response(response.content, content_type="application/json")
+        write_journal(model, prompt, duration)
+
+        return Response(text, content_type="application/json")
+
+    except Exception as e:
+        write_system_log(str(e))
+        raise
 
 
 @app.route("/api/chat", methods=["POST"])
@@ -37,20 +50,16 @@ def chat():
     payload = request.json
 
     model = payload.get("model", "unknown")
+    prompt = str(payload.get("messages", []))
 
-    messages = payload.get("messages", [])
-    prompt = str(messages)
-
-    response = requests.post(
-        f"{OLLAMA}/api/chat",
-        json=payload
-    )
+    r = requests.post(f"{OLLAMA}/api/chat", json=payload)
 
     duration = round(time.time() - start, 3)
 
-    write_log(model, prompt, duration, mode="chat")
+    write_model_log(model, prompt, duration)
+    write_journal(model, prompt, duration)
 
-    return Response(response.content, content_type="application/json")
+    return Response(r.text, content_type="application/json")
 
 
 if __name__ == "__main__":
