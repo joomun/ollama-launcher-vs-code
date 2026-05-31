@@ -1,0 +1,6 @@
+# .gitignore file for Ollama Launcher
+node_modules/
+build/
+coverage/
+tests/
+*.log
