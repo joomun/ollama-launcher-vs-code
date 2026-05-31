@@ -1,18 +1,12 @@
 from flask import Flask, request, Response
 import requests
 import time
-from datetime import datetime
+
+from logger import write_log
 
 app = Flask(__name__)
 
 OLLAMA = "http://localhost:11434"
-
-LOG_FILE = "ollama_requests.log"
-
-
-def log(data):
-    with open(LOG_FILE, "a", encoding="utf-8") as f:
-        f.write(data + "\n")
 
 
 @app.route("/api/generate", methods=["POST"])
@@ -21,26 +15,19 @@ def generate():
     start = time.time()
     payload = request.json
 
-    model = payload.get("model")
-    prompt = payload.get("prompt")
+    model = payload.get("model", "unknown")
+    prompt = payload.get("prompt", "")
 
-    print(f"\n[{datetime.now()}]")
-    print("MODEL:", model)
-    print("PROMPT:", prompt[:300])
-
-    log(f"{datetime.now()} | {model} | {prompt[:200]}")
-
-    r = requests.post(
+    response = requests.post(
         f"{OLLAMA}/api/generate",
-        json=payload,
-        stream=True
+        json=payload
     )
 
-    duration = round(time.time() - start, 2)
+    duration = round(time.time() - start, 3)
 
-    print("Duration:", duration, "s")
+    write_log(model, prompt, duration, mode="generate")
 
-    return Response(r.content, content_type="application/json")
+    return Response(response.content, content_type="application/json")
 
 
 @app.route("/api/chat", methods=["POST"])
@@ -49,23 +36,22 @@ def chat():
     start = time.time()
     payload = request.json
 
-    model = payload.get("model")
+    model = payload.get("model", "unknown")
 
-    print(f"\n[{datetime.now()}]")
-    print("CHAT MODEL:", model)
+    messages = payload.get("messages", [])
+    prompt = str(messages)
 
-    r = requests.post(
+    response = requests.post(
         f"{OLLAMA}/api/chat",
-        json=payload,
-        stream=True
+        json=payload
     )
 
-    duration = round(time.time() - start, 2)
+    duration = round(time.time() - start, 3)
 
-    print("Duration:", duration)
+    write_log(model, prompt, duration, mode="chat")
 
-    return Response(r.content, content_type="application/json")
+    return Response(response.content, content_type="application/json")
 
 
 if __name__ == "__main__":
-    app.run(port=11435, debug=False)
+    app.run(port=11435)
