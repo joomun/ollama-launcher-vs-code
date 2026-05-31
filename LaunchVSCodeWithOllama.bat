@@ -1,9 +1,9 @@
 @echo off
 title VS Code + Ollama Launcher
 
-REM ============================================
+REM ============================================  
 REM Configuration
-REM ============================================
+REM ============================================  
 set MODEL=qwen2.5-coder:7b
 set VSCODE_PATH=%LocalAppData%\Programs\Microsoft VS Code\Code.exe
 
@@ -20,15 +20,15 @@ if "%ERRORLEVEL%"=="0" (
     timeout /t 5 /nobreak >nul
 )
 
-echo Loading model: %MODEL%
+echo Listing available models in Ollama...
 
-REM Load model in separate window
-start "Ollama Model" cmd /k ollama run %MODEL%
+REM List all available models in Ollama
+start "Ollama Models" cmd /k ollama list
 
 echo Waiting for model initialization...
 timeout /t 10 /nobreak >nul
 
-echo Launching VS Code...
+echo Launching VS Code...  
 
 if exist "%VSCODE_PATH%" (
     start "" "%VSCODE_PATH%"
