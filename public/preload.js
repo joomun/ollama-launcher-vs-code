@@ -12,30 +12,56 @@ contextBridge.exposeInMainWorld('electronAPI', {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ name: modelName })
   }).then(res => res.json()),
-  pullModelStream: async (modelName, onProgress) => {
-    const response = await fetch('http://localhost:11434/api/pull', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: modelName, stream: true })
-    });
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder();
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      const chunk = decoder.decode(value);
-      const lines = chunk.split('\n');
-      for (const line of lines) {
-        if (line.trim()) {
-          const data = JSON.parse(line);
-          if (data.completed && data.total) {
-            onProgress((data.completed / data.total) * 100);
+  
+  pullModelStream: async (modelName, onProgress, onStatus, onError) => {
+    try {
+      const response = await fetch('http://localhost:11434/api/pull', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: modelName, stream: true })
+      });
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+        for (const line of lines) {
+          if (line.trim()) {
+            try {
+              const data = JSON.parse(line);
+              if (data.status) {
+                onStatus(data.status);
+              }
+              if (data.digest) {
+                onStatus(`Pulling layer ${data.digest.substring(0, 12)}... ${Math.round((data.completed / data.total) * 100)}%`);
+              }
+              if (data.completed !== undefined && data.total !== undefined) {
+                onProgress((data.completed / data.total) * 100);
+              }
+              if (data.status === 'success') {
+                onProgress(100);
+                onStatus('Download completed successfully!');
+              }
+              if (data.error) throw new Error(data.error);
+            } catch (parseErr) {
+              console.warn('JSON parse error:', line, parseErr);
+            }
           }
-          if (data.status === 'success') onProgress(100);
         }
       }
+    } catch (err) {
+      if (onError) onError(err);
+      throw err;
     }
   },
+
   deleteModel: (modelName) => fetch('http://localhost:11434/api/delete', {
     method: 'DELETE',
     headers: { 'Content-Type': 'application/json' },
@@ -67,5 +93,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onNewLogLine: (callback) => {
     ipcRenderer.on('new-log-line', (event, line) => callback(line));
     return () => ipcRenderer.removeAllListeners('new-log-line');
-  }
+  },
+  pullModelStream: (modelName, onProgress, onStatus, onError) => ipcRenderer.invoke('pull-model-stream', modelName, onProgress, onStatus, onError)
 });
