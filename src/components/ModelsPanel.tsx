@@ -14,6 +14,7 @@ interface ModelsPanelProps {
   models: OllamaModel[];
   systemSpecs: SystemSpecs | null;
   onRefresh: () => void;
+  addLog: (action: string, model: string, status: string, details?: string) => void;
 }
 
 interface RunningModel {
@@ -24,9 +25,10 @@ interface RunningModel {
   details?: any;
 }
 
-const ModelsPanel: React.FC<ModelsPanelProps> = ({ models, systemSpecs, onRefresh }) => {
+const ModelsPanel: React.FC<ModelsPanelProps> = ({ models, systemSpecs, onRefresh, addLog }) => {
   const [recommendations, setRecommendations] = useState<any[]>([]);
   const [downloading, setDownloading] = useState<string | null>(null);
+  const [downloadProgress, setDownloadProgress] = useState<Record<string, number>>({});
   const [runningModels, setRunningModels] = useState<RunningModel[]>([]);
   const [loadingAction, setLoadingAction] = useState<string | null>(null);
 
@@ -47,7 +49,7 @@ const ModelsPanel: React.FC<ModelsPanelProps> = ({ models, systemSpecs, onRefres
     return () => clearInterval(interval);
   }, []);
 
-  // Generate hardware-based recommendations (same as before)
+  // Generate hardware-based recommendations
   useEffect(() => {
     if (systemSpecs) {
       generateRecommendations();
@@ -76,34 +78,51 @@ const ModelsPanel: React.FC<ModelsPanelProps> = ({ models, systemSpecs, onRefres
 
   const handlePullModel = async (modelName: string) => {
     setDownloading(modelName);
+    addLog('DOWNLOAD', modelName, 'started');
     try {
-      await window.electronAPI.pullModel(modelName);
+      await window.electronAPI.pullModelStream(modelName, (percent: number) => {
+        setDownloadProgress(prev => ({ ...prev, [modelName]: percent }));
+      });
+      addLog('DOWNLOAD', modelName, 'success');
       onRefresh();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to pull model", error);
+      addLog('DOWNLOAD', modelName, 'failed', error.message);
     } finally {
       setDownloading(null);
+      // Clear progress after 2 seconds
+      setTimeout(() => {
+        setDownloadProgress(prev => {
+          const newState = { ...prev };
+          delete newState[modelName];
+          return newState;
+        });
+      }, 2000);
     }
   };
 
   const handleDeleteModel = async (modelName: string) => {
-    if (window.confirm(`Are you sure you want to delete ${modelName}?`)) {
+    if (!window.confirm(`Are you sure you want to delete ${modelName}?`)) return;
+    addLog('DELETE', modelName, 'started');
+    try {
       await window.electronAPI.deleteModel(modelName);
+      addLog('DELETE', modelName, 'success');
       onRefresh();
+    } catch (error: any) {
+      addLog('DELETE', modelName, 'failed', error.message);
     }
   };
 
   const handleStartModel = async (modelName: string) => {
     setLoadingAction(`start-${modelName}`);
+    addLog('START', modelName, 'started');
     try {
-      // Send a minimal chat request to load the model
-      await window.electronAPI.generateChat(modelName, [
-        { role: 'user', content: 'Hello' }
-      ]);
-      // Wait a moment and refresh running list
+      await window.electronAPI.startModel(modelName);
+      addLog('START', modelName, 'success');
       setTimeout(fetchRunningModels, 1000);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to start model", error);
+      addLog('START', modelName, 'failed', error.message);
     } finally {
       setLoadingAction(null);
     }
@@ -111,11 +130,14 @@ const ModelsPanel: React.FC<ModelsPanelProps> = ({ models, systemSpecs, onRefres
 
   const handleStopModel = async (modelName: string) => {
     setLoadingAction(`stop-${modelName}`);
+    addLog('STOP', modelName, 'started');
     try {
       await window.electronAPI.stopModel(modelName);
+      addLog('STOP', modelName, 'success');
       setTimeout(fetchRunningModels, 1000);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to stop model", error);
+      addLog('STOP', modelName, 'failed', error.message);
     } finally {
       setLoadingAction(null);
     }
@@ -171,7 +193,7 @@ const ModelsPanel: React.FC<ModelsPanelProps> = ({ models, systemSpecs, onRefres
 
       <Divider sx={{ my: 3 }} />
 
-      {/* Smart Recommendations (unchanged) */}
+      {/* Smart Recommendations */}
       <Typography variant="h5" gutterBottom>💡 Smart Model Recommendations</Typography>
       <Grid container spacing={2} sx={{ mb: 4 }}>
         {recommendations.map((rec, idx) => (
@@ -181,15 +203,21 @@ const ModelsPanel: React.FC<ModelsPanelProps> = ({ models, systemSpecs, onRefres
                 <Typography variant="h6">{rec.name}</Typography>
                 <Typography color="textSecondary" gutterBottom>Best for: {rec.task}</Typography>
                 <Typography variant="body2">{rec.reason}</Typography>
-                <Button
-                  variant="contained"
-                  size="small"
-                  sx={{ mt: 2 }}
-                  onClick={() => handlePullModel(rec.name)}
-                  disabled={downloading === rec.name}
-                >
-                  {downloading === rec.name ? <LinearProgress /> : 'Download & Use'}
-                </Button>
+                {downloading === rec.name ? (
+                  <Box sx={{ mt: 2 }}>
+                    <LinearProgress variant="determinate" value={downloadProgress[rec.name] || 0} />
+                    <Typography variant="caption">{Math.round(downloadProgress[rec.name] || 0)}%</Typography>
+                  </Box>
+                ) : (
+                  <Button
+                    variant="contained"
+                    size="small"
+                    sx={{ mt: 2 }}
+                    onClick={() => handlePullModel(rec.name)}
+                  >
+                    Download & Use
+                  </Button>
+                )}
               </CardContent>
             </Card>
           </Grid>

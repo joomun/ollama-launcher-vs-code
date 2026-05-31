@@ -11,8 +11,9 @@ import ModelsPanel from './components/ModelsPanel';
 import ResourcesPanel from './components/ResourcesPanel';
 import ChatPanel from './components/ChatPanel';
 import ConfigPanel from './components/ConfigPanel';
-import { SystemSpecs, SystemResources, OllamaModel } from './types';
 import LogsPanel from './components/LogsPanel';
+import ActivityLogsPanel, { ActivityLogEntry } from './components/ActivityLogsPanel';
+import { SystemSpecs, SystemResources, OllamaModel } from './types';
 
 const darkTheme = createTheme({
   palette: {
@@ -44,6 +45,11 @@ function App() {
   const [resources, setResources] = useState<SystemResources | null>(null);
   const [models, setModels] = useState<OllamaModel[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activityLogs, setActivityLogs] = useState<ActivityLogEntry[]>([]);
+
+  const addLog = (action: string, model: string, status: string, details?: string) => {
+    setActivityLogs(prev => [{ time: new Date().toLocaleTimeString(), action, model, status, details }, ...prev]);
+  };
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
@@ -91,21 +97,28 @@ function App() {
             <Tab label="System Resources" />
             <Tab label="Chat" />
             <Tab label="Configuration" />
-            <Tab label="Logs" />   
+            <Tab label="Ollama Logs" />
+            <Tab label="Activity Logs" />
           </Tabs>
         </Paper>
         <Box sx={{ flexGrow: 1, overflow: 'auto' }}>
           <TabPanel value={tabValue} index={0}>
-            <ModelsPanel models={models} systemSpecs={systemSpecs} onRefresh={fetchModels} />
+            <ModelsPanel models={models} systemSpecs={systemSpecs} onRefresh={fetchModels} addLog={addLog} />
           </TabPanel>
           <TabPanel value={tabValue} index={1}>
             <ResourcesPanel resources={resources} systemSpecs={systemSpecs} />
           </TabPanel>
           <TabPanel value={tabValue} index={2}>
-            <ChatPanel models={models} />
+            <ChatPanel models={models} addLog={addLog} />
           </TabPanel>
           <TabPanel value={tabValue} index={3}>
             <ConfigPanel />
+          </TabPanel>
+          <TabPanel value={tabValue} index={4}>
+            <LogsPanel />
+          </TabPanel>
+          <TabPanel value={tabValue} index={5}>
+            <ActivityLogsPanel logs={activityLogs} onClear={() => setActivityLogs([])} />
           </TabPanel>
         </Box>
       </Container>

@@ -43,6 +43,8 @@ declare global {
       startLogWatcher: () => Promise<{ success: boolean }>;
       stopLogWatcher: () => Promise<{ success: boolean }>;
       onNewLogLine: (callback: (line: string) => void) => () => void;
+      startModel: (modelName: string) => Promise<Response>;
+      pullModelStream: (modelName: string, onProgress: (percent: number) => void) => Promise<void>;
     };
   }
 }

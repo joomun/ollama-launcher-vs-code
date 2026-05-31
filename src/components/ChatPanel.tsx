@@ -4,6 +4,7 @@ import { OllamaModel } from '../types';
 
 interface ChatPanelProps {
   models: OllamaModel[];
+  addLog: (action: string, model: string, status: string, details?: string) => void;
 }
 
 interface Message {
@@ -11,7 +12,7 @@ interface Message {
   content: string;
 }
 
-const ChatPanel: React.FC<ChatPanelProps> = ({ models }) => {
+const ChatPanel: React.FC<ChatPanelProps> = ({ models, addLog }) => {
   const [selectedModel, setSelectedModel] = useState<string>(models[0]?.name || '');
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
@@ -23,14 +24,17 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ models }) => {
     setMessages(prev => [...prev, userMessage]);
     setInput('');
     setLoading(true);
+    addLog('CHAT', selectedModel, 'sending', input.slice(0, 50));
 
     try {
       const response = await window.electronAPI.generateChat(selectedModel, [...messages, userMessage]);
       const assistantMessage: Message = { role: 'assistant', content: response.message.content };
       setMessages(prev => [...prev, assistantMessage]);
-    } catch (error) {
+      addLog('CHAT', selectedModel, 'success', `Response length: ${response.message.content.length}`);
+    } catch (error: any) {
       console.error("Chat error:", error);
       setMessages(prev => [...prev, { role: 'assistant', content: 'Error communicating with Ollama. Is it running?' }]);
+      addLog('CHAT', selectedModel, 'failed', error.message);
     } finally {
       setLoading(false);
     }
