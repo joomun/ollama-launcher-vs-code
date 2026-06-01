@@ -45,6 +45,7 @@ declare global {
       onNewLogLine: (callback: (line: string) => void) => () => void;
       startModel: (modelName: string) => Promise<Response>;
       pullModelStream: (modelName: string, onProgress: (percent: number) => void, onStatus?: (msg: string) => void, onError?: (error: Error) => void) => Promise<void>;
+      checkOllama: () => Promise<boolean>;
     };
   }
 }

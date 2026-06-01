@@ -24,8 +24,8 @@ const ModelsPanel: React.FC<ModelsPanelProps> = ({ models, systemSpecs, onRefres
   const [recommendations, setRecommendations] = useState<any[]>([]);
   const [runningModels, setRunningModels] = useState<RunningModel[]>([]);
   const [loadingAction, setLoadingAction] = useState<string | null>(null);
-  const [downloadDialog, setDownloadDialog] = useState<{ open: boolean; modelName: string; progress: number; statusMessages: string[]; isComplete: boolean; hasError: boolean; errorMessage?: string; }>({
-    open: false, modelName: '', progress: 0, statusMessages: [], isComplete: false, hasError: false
+  const [downloadState, setDownloadState] = useState<{ open: boolean; modelName: string; isDownloading: boolean; isComplete: boolean; hasError: boolean; errorMessage?: string }>({
+    open: false, modelName: '', isDownloading: false, isComplete: false, hasError: false
   });
 
   const fetchRunningModels = async () => {
@@ -57,27 +57,37 @@ const ModelsPanel: React.FC<ModelsPanelProps> = ({ models, systemSpecs, onRefres
   };
 
   const handlePullModel = async (modelName: string) => {
-    setDownloadDialog({ open: true, modelName, progress: 0, statusMessages: [`Starting download of ${modelName}...`], isComplete: false, hasError: false });
+    // First check if Ollama is running
+    const isOllamaRunning = await window.electronAPI.checkOllama();
+    if (!isOllamaRunning) {
+      setDownloadState({
+        open: true,
+        modelName,
+        isDownloading: false,
+        isComplete: false,
+        hasError: true,
+        errorMessage: 'Ollama is not running. Please start Ollama first (run "ollama serve" in terminal or start from system tray).'
+      });
+      addLog('DOWNLOAD', modelName, 'failed', 'Ollama not running');
+      return;
+    }
+
+    setDownloadState({ open: true, modelName, isDownloading: true, isComplete: false, hasError: false });
     addLog('DOWNLOAD', modelName, 'started');
     try {
-      await window.electronAPI.pullModelStream(
-        modelName,
-        (percent: number) => setDownloadDialog(prev => ({ ...prev, progress: percent })),
-        (statusMsg: string) => setDownloadDialog(prev => ({ ...prev, statusMessages: [...prev.statusMessages, statusMsg] })),
-        (error: Error) => {
-          setDownloadDialog(prev => ({ ...prev, hasError: true, errorMessage: error.message, statusMessages: [...prev.statusMessages, `ERROR: ${error.message}`] }));
-          addLog('DOWNLOAD', modelName, 'failed', error.message);
-        }
-      );
-      setDownloadDialog(prev => ({ ...prev, isComplete: true, progress: 100, statusMessages: [...prev.statusMessages, 'Download complete!'] }));
+      await window.electronAPI.pullModel(modelName);
+      setDownloadState(prev => ({ ...prev, isDownloading: false, isComplete: true }));
       addLog('DOWNLOAD', modelName, 'success');
       onRefresh();
     } catch (error: any) {
-      if (!downloadDialog.hasError) {
-        setDownloadDialog(prev => ({ ...prev, hasError: true, errorMessage: error.message, statusMessages: [...prev.statusMessages, `ERROR: ${error.message}`] }));
-      }
+      console.error('Download error:', error);
+      setDownloadState(prev => ({ ...prev, isDownloading: false, hasError: true, errorMessage: error.message }));
       addLog('DOWNLOAD', modelName, 'failed', error.message);
     }
+  };
+  const closeDialog = () => {
+    setDownloadState(prev => ({ ...prev, open: false }));
+    setTimeout(() => setDownloadState({ open: false, modelName: '', isDownloading: false, isComplete: false, hasError: false }), 500);
   };
 
   const handleDeleteModel = async (modelName: string) => {
@@ -112,11 +122,6 @@ const ModelsPanel: React.FC<ModelsPanelProps> = ({ models, systemSpecs, onRefres
     finally { setLoadingAction(null); }
   };
 
-  const closeDialog = () => {
-    setDownloadDialog(prev => ({ ...prev, open: false }));
-    setTimeout(() => setDownloadDialog({ open: false, modelName: '', progress: 0, statusMessages: [], isComplete: false, hasError: false }), 500);
-  };
-
   if (!systemSpecs) return <LinearProgress />;
 
   const isModelRunning = (name: string) => runningModels.some(m => m.name === name);
@@ -124,13 +129,12 @@ const ModelsPanel: React.FC<ModelsPanelProps> = ({ models, systemSpecs, onRefres
   return (
     <Box>
       <DownloadDialog
-        open={downloadDialog.open}
-        modelName={downloadDialog.modelName}
-        progress={downloadDialog.progress}
-        statusMessages={downloadDialog.statusMessages}
-        isComplete={downloadDialog.isComplete}
-        hasError={downloadDialog.hasError}
-        errorMessage={downloadDialog.errorMessage}
+        open={downloadState.open}
+        modelName={downloadState.modelName}
+        isDownloading={downloadState.isDownloading}
+        isComplete={downloadState.isComplete}
+        hasError={downloadState.hasError}
+        errorMessage={downloadState.errorMessage}
         onClose={closeDialog}
       />
 

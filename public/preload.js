@@ -5,61 +5,41 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getSystemSpecs: () => ipcRenderer.invoke('get-system-specs'),
   getCurrentResources: () => ipcRenderer.invoke('get-current-resources'),
 
+  // Check if Ollama is reachable
+  checkOllama: async () => {
+    try {
+      const res = await fetch('http://localhost:11434/api/tags');
+      return res.ok;
+    } catch {
+      return false;
+    }
+  },
+
   // Model management
   fetchModels: () => fetch('http://localhost:11434/api/tags').then(res => res.json()),
-  pullModel: (modelName) => fetch('http://localhost:11434/api/pull', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ name: modelName })
-  }).then(res => res.json()),
   
-  pullModelStream: async (modelName, onProgress, onStatus, onError) => {
-    try {
-      const response = await fetch('http://localhost:11434/api/pull', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: modelName, stream: true })
-      });
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let buffer = '';
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split('\n');
-        buffer = lines.pop() || '';
-        for (const line of lines) {
-          if (line.trim()) {
-            try {
-              const data = JSON.parse(line);
-              if (data.status) {
-                onStatus(data.status);
-              }
-              if (data.digest) {
-                onStatus(`Pulling layer ${data.digest.substring(0, 12)}... ${Math.round((data.completed / data.total) * 100)}%`);
-              }
-              if (data.completed !== undefined && data.total !== undefined) {
-                onProgress((data.completed / data.total) * 100);
-              }
-              if (data.status === 'success') {
-                onProgress(100);
-                onStatus('Download completed successfully!');
-              }
-              if (data.error) throw new Error(data.error);
-            } catch (parseErr) {
-              console.warn('JSON parse error:', line, parseErr);
-            }
-          }
-        }
-      }
-    } catch (err) {
-      if (onError) onError(err);
-      throw err;
+  // Robust pullModel with full error handling
+  pullModel: async (modelName) => {
+    const response = await fetch('http://localhost:11434/api/pull', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: modelName })
+    });
+    // Get response as text for debugging
+    const text = await response.text();
+    // If not OK, throw with the response text
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${text.substring(0, 200)}`);
     }
+    // Try to parse JSON
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch (e) {
+      throw new Error(`Invalid JSON response from Ollama. Is Ollama running? Response: ${text.substring(0, 200)}`);
+    }
+    if (data.error) throw new Error(data.error);
+    return data;
   },
 
   deleteModel: (modelName) => fetch('http://localhost:11434/api/delete', {
@@ -93,6 +73,5 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onNewLogLine: (callback) => {
     ipcRenderer.on('new-log-line', (event, line) => callback(line));
     return () => ipcRenderer.removeAllListeners('new-log-line');
-  },
-  pullModelStream: (modelName, onProgress, onStatus, onError) => ipcRenderer.invoke('pull-model-stream', modelName, onProgress, onStatus, onError)
+  }
 });
