@@ -103,7 +103,7 @@ function App() {
         </Paper>
         <Box sx={{ flexGrow: 1, overflow: 'auto' }}>
           <TabPanel value={tabValue} index={0}>
-            <ModelsPanel models={models} systemSpecs={systemSpecs} onRefresh={fetchModels} addLog={addLog} />
+            <ModelsPanel models={models} systemSpecs={systemSpecs} resources={resources} onRefresh={fetchModels} addLog={addLog} />
           </TabPanel>
           <TabPanel value={tabValue} index={1}>
             <ResourcesPanel resources={resources} systemSpecs={systemSpecs} />
