@@ -1,0 +1,3 @@
+# .gitignore
+# Add any files or directories you want to ignore here.
+!md_ollama/**
