@@ -164,7 +164,7 @@ const LogsPanel: React.FC = () => {
         ))}
       </Paper>
       <Typography variant="caption" color="textSecondary" sx={{ mt: 1 }}>
-        Log file location: %USERPROFILE%\.ollama\logs\server.log
+        Log file location: $env:LOCALAPPDATA\Ollama\server.log
         {watching && <span style={{ color: '#4caf50', marginLeft: 8 }}>● Live watching active</span>}
       </Typography>
     </Box>

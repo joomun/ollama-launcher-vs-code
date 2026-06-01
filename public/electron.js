@@ -95,8 +95,9 @@ ipcMain.handle('get-current-resources', async () => {
   }
 });
 
+
 // --- Ollama Log Handling ---
-const ollamaLogPath = path.join(os.homedir(), '.ollama', 'logs', 'server.log');
+const ollamaLogPath = path.join(process.env.LOCALAPPDATA, 'Ollama', 'server.log');
 let logWatcher = null;
 let logEmitter = new EventEmitter();
 
