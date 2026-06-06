@@ -19,45 +19,24 @@ interface ModelsPanelProps {
   addLog: (action: string, model: string, status: string, details?: string) => void;
 }
 
-interface RunningModel {
-  name: string;
-  model: string;
-  size: number;
-  digest: string;
-  details?: any;
-}
+interface RunningModel { name: string; model: string; size: number; digest: string; details?: any; }
 
-interface ModelCatalogEntry {
-  name: string;
-  description: string;
-  parameterSize: string;
-  diskSizeGB: number;
-  vramRequiredGB: number;
-  ramRequiredGB: number;
-  task: string;
-  quantization: string;
-  popularity: number;
-}
-
-const MODEL_CATALOG: ModelCatalogEntry[] = [
-  { name: 'llama3.2:3b', description: 'Fast, lightweight model for basic conversations', parameterSize: '3B', diskSizeGB: 2.0, vramRequiredGB: 2, ramRequiredGB: 4, task: 'General Chat', quantization: 'Q4_K_M', popularity: 95 },
-  { name: 'llama3.2:7b', description: 'Excellent all-rounder for most tasks', parameterSize: '7B', diskSizeGB: 4.5, vramRequiredGB: 6, ramRequiredGB: 8, task: 'General Chat', quantization: 'Q4_K_M', popularity: 98 },
-  { name: 'mistral:7b', description: 'Efficient and capable general model', parameterSize: '7B', diskSizeGB: 4.1, vramRequiredGB: 6, ramRequiredGB: 8, task: 'General Chat', quantization: 'Q4_0', popularity: 96 },
-  { name: 'phi3:mini', description: 'Very small but capable (3.8B parameters)', parameterSize: '3.8B', diskSizeGB: 2.3, vramRequiredGB: 2, ramRequiredGB: 4, task: 'General Chat', quantization: 'Q4_K_M', popularity: 88 },
-  { name: 'llama3.1:8b', description: 'Strong reasoning and complex tasks', parameterSize: '8B', diskSizeGB: 4.7, vramRequiredGB: 8, ramRequiredGB: 12, task: 'Advanced Reasoning', quantization: 'Q4_K_M', popularity: 94 },
-  { name: 'mixtral:8x7b', description: 'Powerful MoE model, needs lots of VRAM', parameterSize: '8x7B', diskSizeGB: 24, vramRequiredGB: 16, ramRequiredGB: 32, task: 'Advanced Reasoning', quantization: 'Q4_0', popularity: 85 },
-  { name: 'deepseek-coder:6.7b', description: 'Specialized for code generation and understanding', parameterSize: '6.7B', diskSizeGB: 3.8, vramRequiredGB: 6, ramRequiredGB: 8, task: 'Coding', quantization: 'Q4_0', popularity: 92 },
-  { name: 'codellama:7b', description: "Meta's code model, good for code completion", parameterSize: '7B', diskSizeGB: 3.8, vramRequiredGB: 6, ramRequiredGB: 8, task: 'Coding', quantization: 'Q4_0', popularity: 90 },
-  { name: 'deepseek-coder:33b', description: 'Powerful coding model, needs high VRAM', parameterSize: '33B', diskSizeGB: 19, vramRequiredGB: 20, ramRequiredGB: 32, task: 'Coding', quantization: 'Q4_0', popularity: 82 },
-  { name: 'nous-hermes:7b', description: 'Good for storytelling and creative writing', parameterSize: '7B', diskSizeGB: 4.1, vramRequiredGB: 6, ramRequiredGB: 8, task: 'Creative Writing', quantization: 'Q4_K_M', popularity: 86 },
-  { name: 'dolphin-mistral:7b', description: 'Uncensored creative model', parameterSize: '7B', diskSizeGB: 4.1, vramRequiredGB: 6, ramRequiredGB: 8, task: 'Creative Writing', quantization: 'Q4_K_M', popularity: 84 },
-  { name: 'qwen2.5:7b', description: 'Good for non-English languages', parameterSize: '7B', diskSizeGB: 4.2, vramRequiredGB: 6, ramRequiredGB: 8, task: 'Multilingual', quantization: 'Q4_K_M', popularity: 87 },
-  { name: 'qwen2.5:14b', description: 'Strong multilingual with larger context', parameterSize: '14B', diskSizeGB: 8.2, vramRequiredGB: 12, ramRequiredGB: 16, task: 'Multilingual', quantization: 'Q4_K_M', popularity: 80 },
-  { name: 'tinyllama:1.1b', description: 'Extremely small, runs on anything', parameterSize: '1.1B', diskSizeGB: 0.6, vramRequiredGB: 0.5, ramRequiredGB: 2, task: 'General Chat', quantization: 'Q4_K_M', popularity: 75 },
+const MODEL_CATALOG = [
+  { name: 'llama3.2:3b', parameterSize: '3B', vramRequiredGB: 2, ramRequiredGB: 4, diskSizeGB: 2.0, task: 'General Chat', description: 'Fast, lightweight' },
+  { name: 'llama3.2:7b', parameterSize: '7B', vramRequiredGB: 6, ramRequiredGB: 8, diskSizeGB: 4.5, task: 'General Chat', description: 'Excellent all-rounder' },
+  { name: 'mistral:7b', parameterSize: '7B', vramRequiredGB: 6, ramRequiredGB: 8, diskSizeGB: 4.1, task: 'General Chat', description: 'Efficient and capable' },
+  { name: 'deepseek-coder:6.7b', parameterSize: '6.7B', vramRequiredGB: 6, ramRequiredGB: 8, diskSizeGB: 3.8, task: 'Coding', description: 'Specialized for coding' },
+  { name: 'codellama:7b', parameterSize: '7B', vramRequiredGB: 6, ramRequiredGB: 8, diskSizeGB: 3.8, task: 'Coding', description: 'Meta\'s code model' },
+  { name: 'llama3.1:8b', parameterSize: '8B', vramRequiredGB: 8, ramRequiredGB: 12, diskSizeGB: 4.7, task: 'Advanced Reasoning', description: 'Strong reasoning' },
+  { name: 'phi3:mini', parameterSize: '3.8B', vramRequiredGB: 2, ramRequiredGB: 4, diskSizeGB: 2.3, task: 'General Chat', description: 'Very small but capable' },
+  { name: 'qwen2.5:7b', parameterSize: '7B', vramRequiredGB: 6, ramRequiredGB: 8, diskSizeGB: 4.2, task: 'Multilingual', description: 'Good for non-English' },
+  { name: 'tinyllama:1.1b', parameterSize: '1.1B', vramRequiredGB: 0.5, ramRequiredGB: 2, diskSizeGB: 0.6, task: 'General Chat', description: 'Extremely small' },
 ];
 
 const ModelsPanel: React.FC<ModelsPanelProps> = ({ models, systemSpecs, resources, onRefresh, addLog }) => {
+  const [task, setTask] = useState<string>('General Chat');
   const [recommendations, setRecommendations] = useState<any[]>([]);
+  const [loadingRecommendations, setLoadingRecommendations] = useState(false);
   const [downloading, setDownloading] = useState<string | null>(null);
   const [runningModels, setRunningModels] = useState<RunningModel[]>([]);
   const [loadingAction, setLoadingAction] = useState<string | null>(null);
@@ -68,9 +47,7 @@ const ModelsPanel: React.FC<ModelsPanelProps> = ({ models, systemSpecs, resource
     try {
       const data = await window.electronAPI.getRunningModels();
       setRunningModels(data.models || []);
-    } catch (error) {
-      console.error("Failed to fetch running models", error);
-    }
+    } catch (error) { console.error(error); }
   };
 
   useEffect(() => {
@@ -79,22 +56,80 @@ const ModelsPanel: React.FC<ModelsPanelProps> = ({ models, systemSpecs, resource
     return () => clearInterval(interval);
   }, []);
 
-  const generateRecommendations = useCallback(() => {
-    const vramTotal = systemSpecs?.gpu.reduce((acc, gpu) => acc + (gpu.vram || 0), 0) || 0;
-    const ramTotal = systemSpecs?.ram.total || 0;
-    const recommended = [];
-    if (vramTotal >= 8) recommended.push({ name: 'llama3.2:7b', task: 'General Chat', reason: 'Excellent all-rounder for 8GB+ VRAM.' });
-    if (vramTotal >= 6) recommended.push({ name: 'deepseek-coder:6.7b', task: 'Coding', reason: 'Strong coding assistant for mid-range GPUs.' });
-    if (ramTotal >= 16) recommended.push({ name: 'mistral:7b', task: 'General Chat', reason: 'Fast and efficient for CPU/GPU mixing.' });
-    if (vramTotal >= 12) recommended.push({ name: 'llama3.1:8b', task: 'Advanced Reasoning', reason: 'Great for complex tasks on 12GB+ VRAM.' });
-    setRecommendations(recommended);
-  }, [systemSpecs]);
+  // AI‑powered recommendation
+  const fetchAIRecs = useCallback(async () => {
+    // Check if phi3:mini is installed
+    const modelsList = await window.electronAPI.fetchModels();
+    const hasPhi3 = modelsList.models?.some(m => m.name === 'phi3:mini');
+    if (!hasPhi3) {
+      setRecommendations([{
+        name: 'phi3:mini',
+        reason: 'This small model is needed to power AI recommendations. Please download it first.',
+        vramRequiredGB: 2,
+        ramRequiredGB: 4,
+        suitable: true,
+        installed: false
+      }]);
+      setLoadingRecommendations(false);
+      return;
+    }
+    if (!systemSpecs || !resources) return;
+    setLoadingRecommendations(true);
+    const freeRamGB = (resources.ram.total - resources.ram.used) / (1024 ** 3);
+    const totalVramGB = systemSpecs.gpu.reduce((acc, gpu) => acc + (gpu.vram || 0), 0);
+    const freeVramGB = resources.vram ? (resources.vram.total - resources.vram.used) / (1024 ** 3) : totalVramGB;
+    const hasGpu = totalVramGB > 0;
+
+    const systemInfo = {
+      cpu: { cores: systemSpecs.cpu.cores },
+      freeRamGB,
+      freeVramGB,
+      hasGpu
+    };
+
+    try {
+      const aiRecs = await window.electronAPI.getModelRecommendations(systemInfo, task);
+      if (aiRecs && aiRecs.length > 0) {
+        // Enrich AI recs with catalog data
+        const enriched = aiRecs.map(rec => {
+          const catalog = MODEL_CATALOG.find(m => m.name === rec.name);
+          return {
+            ...rec,
+            ...catalog,
+            installed: models.some(m => m.name === rec.name),
+            suitable: catalog ? (catalog.vramRequiredGB <= freeVramGB && catalog.ramRequiredGB <= freeRamGB) : false
+          };
+        });
+        setRecommendations(enriched);
+      } else {
+        // Fallback to simple catalog scoring
+        fallbackRecommendations(freeRamGB, freeVramGB, hasGpu);
+      }
+    } catch (err) {
+      console.error('AI recommendation failed, using fallback', err);
+      fallbackRecommendations(freeRamGB, freeVramGB, hasGpu);
+    }
+    setLoadingRecommendations(false);
+  }, [task, systemSpecs, resources, models]);
+
+  const fallbackRecommendations = (freeRamGB: number, freeVramGB: number, hasGpu: boolean) => {
+    const scored = MODEL_CATALOG.map(model => {
+      let score = 0;
+      let suitable = true;
+      if (hasGpu && freeVramGB >= model.vramRequiredGB) score += 10;
+      else if (!hasGpu && model.vramRequiredGB > 2) suitable = false;
+      if (freeRamGB >= model.ramRequiredGB) score += 5;
+      else suitable = false;
+      if (model.task === task) score += 5;
+      return { ...model, score, suitable, installed: models.some(m => m.name === model.name), reason: `${model.description}, requires ${model.vramRequiredGB}GB VRAM, ${model.ramRequiredGB}GB RAM` };
+    });
+    const top = scored.filter(m => m.suitable || m.score > 0).sort((a,b) => b.score - a.score).slice(0,4);
+    setRecommendations(top);
+  };
 
   useEffect(() => {
-    if (systemSpecs) {
-      generateRecommendations();
-    }
-  }, [systemSpecs, models, generateRecommendations]);
+    fetchAIRecs();
+  }, [task, fetchAIRecs]);
 
   const handlePullModel = async (modelName: string) => {
     setDownloading(modelName);
@@ -104,7 +139,6 @@ const ModelsPanel: React.FC<ModelsPanelProps> = ({ models, systemSpecs, resource
       addLog('DOWNLOAD', modelName, 'success');
       onRefresh();
     } catch (error: any) {
-      console.error("Failed to pull model", error);
       addLog('DOWNLOAD', modelName, 'failed', error.message);
     } finally {
       setDownloading(null);
@@ -118,9 +152,7 @@ const ModelsPanel: React.FC<ModelsPanelProps> = ({ models, systemSpecs, resource
         await window.electronAPI.deleteModel(modelName);
         addLog('DELETE', modelName, 'success');
         onRefresh();
-      } catch (error: any) {
-        addLog('DELETE', modelName, 'failed', error.message);
-      }
+      } catch (error: any) { addLog('DELETE', modelName, 'failed', error.message); }
     }
   };
 
@@ -131,12 +163,8 @@ const ModelsPanel: React.FC<ModelsPanelProps> = ({ models, systemSpecs, resource
       await window.electronAPI.generateChat(modelName, [{ role: 'user', content: 'Hello' }]);
       addLog('START', modelName, 'success');
       setTimeout(fetchRunningModels, 1000);
-    } catch (error: any) {
-      console.error("Failed to start model", error);
-      addLog('START', modelName, 'failed', error.message);
-    } finally {
-      setLoadingAction(null);
-    }
+    } catch (error: any) { addLog('START', modelName, 'failed', error.message); }
+    finally { setLoadingAction(null); }
   };
 
   const handleStopModel = async (modelName: string) => {
@@ -146,37 +174,44 @@ const ModelsPanel: React.FC<ModelsPanelProps> = ({ models, systemSpecs, resource
       await window.electronAPI.stopModel(modelName);
       addLog('STOP', modelName, 'success');
       setTimeout(fetchRunningModels, 1000);
-    } catch (error: any) {
-      console.error("Failed to stop model", error);
-      addLog('STOP', modelName, 'failed', error.message);
-    } finally {
-      setLoadingAction(null);
-    }
+    } catch (error: any) { addLog('STOP', modelName, 'failed', error.message); }
+    finally { setLoadingAction(null); }
   };
 
-  if (!systemSpecs) return <LinearProgress />;
+  const handleManualRefresh = () => {
+    onRefresh();
+    fetchAIRecs();
+  };
+
+  if (!systemSpecs || !resources) return <LinearProgress />;
 
   const isModelRunning = (name: string) => runningModels.some(m => m.name === name);
   const isInstalled = (name: string) => models.some(m => m.name === name);
+  const freeRamGB = (resources.ram.total - resources.ram.used) / (1024 ** 3);
+  const totalVramGB = systemSpecs.gpu.reduce((acc, gpu) => acc + (gpu.vram || 0), 0);
+  const freeVramGB = resources.vram ? (resources.vram.total - resources.vram.used) / (1024 ** 3) : totalVramGB;
+  const hasGpu = totalVramGB > 0;
 
   const filteredModels = MODEL_CATALOG.filter(model => {
     const matchesSearch = model.name.toLowerCase().includes(discoverSearch.toLowerCase()) ||
                           model.description.toLowerCase().includes(discoverSearch.toLowerCase());
     const matchesTask = discoverTaskFilter === 'All' || model.task === discoverTaskFilter;
     return matchesSearch && matchesTask;
-  }).sort((a, b) => b.popularity - a.popularity);
+  });
 
   return (
     <Box>
-      {/* Running Models Section */}
+      <Alert severity="info" sx={{ mb: 2 }}>
+        <Typography variant="body2">Free RAM: {freeRamGB.toFixed(1)} GB / {(resources.ram.total / (1024**3)).toFixed(1)} GB</Typography>
+        <Typography variant="body2">Free VRAM: {freeVramGB.toFixed(1)} GB / {totalVramGB.toFixed(0)} GB</Typography>
+      </Alert>
+
       <Typography variant="h5" gutterBottom sx={{ mt: 2 }}>
         🟢 Running Models
-        <IconButton size="small" onClick={fetchRunningModels} sx={{ ml: 1 }}>
-          <RefreshIcon fontSize="small" />
-        </IconButton>
+        <IconButton size="small" onClick={fetchRunningModels} sx={{ ml: 1 }}><RefreshIcon fontSize="small" /></IconButton>
       </Typography>
       {runningModels.length === 0 ? (
-        <Alert severity="info" sx={{ mb: 3 }}>No models are currently loaded in memory. Start one below.</Alert>
+        <Alert severity="info" sx={{ mb: 3 }}>No models currently loaded.</Alert>
       ) : (
         <Grid container spacing={2} sx={{ mb: 4 }}>
           {runningModels.map((model) => (
@@ -200,19 +235,45 @@ const ModelsPanel: React.FC<ModelsPanelProps> = ({ models, systemSpecs, resource
 
       <Divider sx={{ my: 3 }} />
 
-      {/* Smart Recommendations */}
-      <Typography variant="h5" gutterBottom>💡 Smart Model Recommendations</Typography>
+      <Typography variant="h5" gutterBottom>💡 AI‑Powered Smart Recommendations</Typography>
+      <FormControl fullWidth sx={{ mb: 2 }}>
+        <InputLabel>What will you use the AI for?</InputLabel>
+        <Select value={task} label="What will you use the AI for?" onChange={(e) => setTask(e.target.value)}>
+          <MenuItem value="General Chat">General Chat</MenuItem>
+          <MenuItem value="Coding">Coding Assistance</MenuItem>
+          <MenuItem value="Advanced Reasoning">Advanced Reasoning</MenuItem>
+          <MenuItem value="Creative Writing">Creative Writing</MenuItem>
+          <MenuItem value="Multilingual">Multilingual</MenuItem>
+        </Select>
+      </FormControl>
+
+      {loadingRecommendations && <LinearProgress sx={{ mb: 2 }} />}
       <Grid container spacing={2} sx={{ mb: 4 }}>
+        {recommendations.length === 0 && !loadingRecommendations && (
+          <Alert severity="info">No recommendations yet. Select a task and ensure Ollama is running with phi3:mini model installed.</Alert>
+        )}
         {recommendations.map((rec, idx) => (
           <Grid size={{ xs: 12, md: 3 }} key={idx}>
-            <Card>
+            <Card sx={{ opacity: rec.suitable ? 1 : 0.7 }}>
               <CardContent>
                 <Typography variant="h6">{rec.name}</Typography>
-                <Typography color="textSecondary" gutterBottom>Best for: {rec.task}</Typography>
-                <Typography variant="body2">{rec.reason}</Typography>
-                <Button variant="contained" size="small" sx={{ mt: 2 }} onClick={() => handlePullModel(rec.name)} disabled={downloading === rec.name}>
-                  {downloading === rec.name ? <LinearProgress /> : 'Download & Use'}
-                </Button>
+                <Typography color="textSecondary" variant="caption">{rec.reason || rec.description}</Typography>
+                <Box sx={{ my: 1 }}>
+                  <Chip size="small" label={`VRAM: ${rec.vramRequiredGB}GB`} />
+                  <Chip size="small" label={`RAM: ${rec.ramRequiredGB}GB`} sx={{ ml: 1 }} />
+                </Box>
+                {!rec.suitable && hasGpu && (
+                  <Typography variant="caption" color="warning.main" sx={{ display: 'block', mt: 1 }}>
+                    ⚠️ May exceed free VRAM/RAM
+                  </Typography>
+                )}
+                {rec.installed ? (
+                  <Button variant="outlined" size="small" sx={{ mt: 2 }} disabled>Installed</Button>
+                ) : (
+                  <Button variant="contained" size="small" sx={{ mt: 2 }} onClick={() => handlePullModel(rec.name)} disabled={downloading === rec.name}>
+                    {downloading === rec.name ? <LinearProgress sx={{ width: 60 }} /> : 'Download & Use'}
+                  </Button>
+                )}
               </CardContent>
             </Card>
           </Grid>
@@ -221,19 +282,11 @@ const ModelsPanel: React.FC<ModelsPanelProps> = ({ models, systemSpecs, resource
 
       <Divider sx={{ my: 3 }} />
 
-      {/* Discover More Models */}
-      <Typography variant="h5" gutterBottom>🔍 Discover More Models</Typography>
+      <Typography variant="h5" gutterBottom>🔍 Browse All Models</Typography>
       <Box sx={{ display: 'flex', gap: 2, mb: 2, flexWrap: 'wrap' }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexGrow: 1 }}>
           <SearchIcon sx={{ color: 'text.secondary' }} />
-          <TextField
-            fullWidth
-            size="small"
-            placeholder="Search models..."
-            value={discoverSearch}
-            onChange={(e) => setDiscoverSearch(e.target.value)}
-            variant="outlined"
-          />
+          <TextField fullWidth size="small" placeholder="Search..." value={discoverSearch} onChange={(e) => setDiscoverSearch(e.target.value)} variant="outlined" />
         </Box>
         <FormControl size="small" sx={{ minWidth: 150 }}>
           <InputLabel>Task</InputLabel>
@@ -247,7 +300,6 @@ const ModelsPanel: React.FC<ModelsPanelProps> = ({ models, systemSpecs, resource
           </Select>
         </FormControl>
       </Box>
-
       <Grid container spacing={2} sx={{ mb: 4 }}>
         {filteredModels.map((model) => {
           const installed = isInstalled(model.name);
@@ -263,13 +315,8 @@ const ModelsPanel: React.FC<ModelsPanelProps> = ({ models, systemSpecs, resource
                     <Chip size="small" label={`VRAM: ${model.vramRequiredGB} GB`} sx={{ ml: 1 }} />
                     <Chip size="small" label={`RAM: ${model.ramRequiredGB} GB`} sx={{ ml: 1 }} />
                   </Box>
-                  <Typography variant="caption" sx={{ display: 'block', color: 'textSecondary' }}>
-                    Quantization: {model.quantization} | Task: {model.task}
-                  </Typography>
                   {installed ? (
-                    <Button variant="outlined" size="small" sx={{ mt: 2 }} disabled startIcon={<DownloadIcon />}>
-                      Installed
-                    </Button>
+                    <Button variant="outlined" size="small" sx={{ mt: 2 }} disabled>Installed</Button>
                   ) : (
                     <Button variant="contained" size="small" sx={{ mt: 2 }} startIcon={<DownloadIcon />} onClick={() => handlePullModel(model.name)} disabled={downloading === model.name}>
                       {downloading === model.name ? <LinearProgress sx={{ width: 60 }} /> : 'Download'}
@@ -282,8 +329,10 @@ const ModelsPanel: React.FC<ModelsPanelProps> = ({ models, systemSpecs, resource
         })}
       </Grid>
 
-      {/* Installed Models */}
-      <Typography variant="h5" gutterBottom>📦 Your Installed Models</Typography>
+      <Typography variant="h5" gutterBottom>
+        📦 Your Installed Models
+        <IconButton size="small" onClick={handleManualRefresh} sx={{ ml: 1 }}><RefreshIcon fontSize="small" /></IconButton>
+      </Typography>
       <Grid container spacing={2}>
         {models.map((model) => {
           const running = isModelRunning(model.name);

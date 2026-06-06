@@ -73,5 +73,29 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onNewLogLine: (callback) => {
     ipcRenderer.on('new-log-line', (event, line) => callback(line));
     return () => ipcRenderer.removeAllListeners('new-log-line');
+  },
+  getModelRecommendations: async (systemInfo, task) => {
+  const prompt = `You are an AI model selection expert. Based on the following system specifications and user task, recommend 4 suitable Ollama models from the list below. Return ONLY a JSON array with objects containing: name, reason. Available models: llama3.2:3b (3B, needs 2GB VRAM, 4GB RAM), llama3.2:7b (7B, needs 6GB VRAM, 8GB RAM), mistral:7b (7B, needs 6GB VRAM, 8GB RAM), deepseek-coder:6.7b (6.7B, needs 6GB VRAM, 8GB RAM, best for coding), codellama:7b (7B, needs 6GB VRAM, 8GB RAM), llama3.1:8b (8B, needs 8GB VRAM, 12GB RAM), phi3:mini (3.8B, needs 2GB VRAM, 4GB RAM), qwen2.5:7b (7B, needs 6GB VRAM, 8GB RAM), tinyllama:1.1b (1.1B, needs 0.5GB VRAM, 2GB RAM). System: CPU ${systemInfo.cpu.cores} cores, free RAM ${systemInfo.freeRamGB} GB, GPU VRAM ${systemInfo.freeVramGB} GB (${systemInfo.hasGpu ? 'available' : 'not available'}). Task: ${task}. Consider hardware limits and task relevance.`;
+  
+  const response = await fetch('http://localhost:11434/api/generate', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'phi3:mini',
+      prompt: prompt,
+      stream: false,
+      options: { temperature: 0.3, num_predict: 500 }
+    })
+  });
+  const data = await response.json();
+  try {
+    // Extract JSON from response
+    const jsonMatch = data.response.match(/\[[\s\S]*\]/);
+    if (jsonMatch) return JSON.parse(jsonMatch[0]);
+    return [];
+  } catch (e) {
+    console.error('Failed to parse AI recommendation', e);
+    return [];
   }
+}
 });

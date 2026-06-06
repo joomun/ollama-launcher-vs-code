@@ -46,6 +46,7 @@ declare global {
       startModel: (modelName: string) => Promise<Response>;
       pullModelStream: (modelName: string, onProgress: (percent: number) => void, onStatus?: (msg: string) => void, onError?: (error: Error) => void) => Promise<void>;
       checkOllama: () => Promise<boolean>;
+      getModelRecommendations: (systemInfo: any, task: string) => Promise<Array<{name: string; reason: string}>>;
     };
   }
 }
